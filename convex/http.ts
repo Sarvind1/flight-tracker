@@ -4,7 +4,22 @@ import { api } from "./_generated/api";
 
 const http = httpRouter();
 
-// GET /sync/targets — returns active fetch targets for the scraper
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Authorization, Content-Type",
+};
+
+// OPTIONS preflight for /sync/targets
+http.route({
+  path: "/sync/targets",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
+// GET /sync/targets — returns active fetch targets
 http.route({
   path: "/sync/targets",
   method: "GET",
@@ -12,14 +27,22 @@ http.route({
     const token = request.headers.get("Authorization");
     const expected = process.env.SCRAPER_TOKEN;
     if (!expected || token !== `Bearer ${expected}`) {
-      return new Response("Unauthorized", { status: 401 });
+      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
     }
 
-    // Refresh fetchTargets (upsert for today's window) then return them
     const targets = await ctx.runMutation(api.fetchTargets.refreshAndList);
     return new Response(JSON.stringify(targets), {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
+  }),
+});
+
+// OPTIONS preflight for /sync/quotes
+http.route({
+  path: "/sync/quotes",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
   }),
 });
 
@@ -31,16 +54,14 @@ http.route({
     const token = request.headers.get("Authorization");
     const expected = process.env.SCRAPER_TOKEN;
     if (!expected || token !== `Bearer ${expected}`) {
-      return new Response("Unauthorized", { status: 401 });
+      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
     }
 
     const body = await request.json();
-    // body = { runStartedAt, results: [{ targetId, status, quotes: [...], error? }] }
-
     await ctx.runMutation(api.syncQuotes.ingestResults, { payload: body });
 
     return new Response(JSON.stringify({ ok: true }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }),
 });

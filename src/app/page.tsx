@@ -12,16 +12,6 @@ import { RouteForm } from "@/components/RouteForm";
 import { HistoryView } from "@/components/HistoryView";
 import { SettingsView } from "@/components/SettingsView";
 
-declare global {
-  // eslint-disable-next-line no-var
-  var chrome: {
-    runtime?: {
-      sendMessage: (extensionId: string, message: unknown, callback: (response: any) => void) => void;
-      lastError?: { message?: string };
-    };
-  } | undefined;
-}
-
 type View = "routes" | "history" | "settings";
 
 function AppShell() {
@@ -33,70 +23,43 @@ function AppShell() {
   const [extensionConnected, setExtensionConnected] = useState(false);
   const toast = useToast();
 
-  // Detect ftrack Chrome extension on mount
+  // Detect ftrack Chrome extension via content script postMessage
   useEffect(() => {
-    const tryPing = (id: string) => {
-      if (typeof chrome === 'undefined' || !chrome?.runtime?.sendMessage) return;
-      try {
-        chrome.runtime.sendMessage(id, { type: 'PING' }, (res) => {
-          if (typeof chrome !== 'undefined' && !chrome?.runtime?.lastError && res?.installed) {
-            localStorage.setItem('ftrack_extension_id', id);
-            setExtensionConnected(true);
-            console.log('ftrack extension detected:', id);
-          }
-        });
-      } catch {
-        // Extension not available
+    const handler = (event: MessageEvent) => {
+      if (event.source !== window) return;
+      if (event.data?.type === 'FTRACK_EXTENSION_INSTALLED') {
+        setExtensionConnected(true);
+        console.log('ftrack extension detected:', event.data.extensionId);
+      }
+      if (event.data?.type === 'FTRACK_FETCH_STARTED') {
+        // Extension acknowledged fetch request
+      }
+      if (event.data?.type === 'FTRACK_STATUS') {
+        if (!event.data.fetching) {
+          setFetching(false);
+          toast("Prices updated!");
+        }
       }
     };
-
-    const savedId = localStorage.getItem('ftrack_extension_id');
-    if (savedId) tryPing(savedId);
-  }, []);
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [toast]);
 
   const triggerFetch = useCallback(async () => {
     setFetching(true);
     toast("Fetching prices...");
 
-    // Try the Chrome extension first
-    const extensionId = localStorage.getItem('ftrack_extension_id');
-    if (extensionId && typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
-      try {
-        const response = await new Promise<{ status?: string; installed?: boolean }>((resolve, reject) => {
-          chrome!.runtime!.sendMessage(extensionId, { type: 'FETCH_NOW' }, (res) => {
-            if (typeof chrome !== 'undefined' && chrome?.runtime?.lastError) {
-              reject(new Error(chrome.runtime.lastError.message));
-            } else {
-              resolve(res || {});
-            }
-          });
-        });
-
-        if (response.status === 'started') {
-          toast("Extension is fetching prices — this takes ~2 min");
-          // Poll for completion
-          const poll = setInterval(async () => {
-            try {
-              const statusRes = await new Promise<{ fetching?: boolean }>((resolve) => {
-                chrome!.runtime!.sendMessage(extensionId, { type: 'GET_STATUS' }, (res) => {
-                  resolve(res || {});
-                });
-              });
-              if (!statusRes.fetching) {
-                clearInterval(poll);
-                setFetching(false);
-                toast("Prices updated!");
-              }
-            } catch {
-              clearInterval(poll);
-              setFetching(false);
-            }
-          }, 3000);
-          return;
-        }
-      } catch {
-        // Extension not available, fall through to localhost
-      }
+    // Try the Chrome extension first (via content script postMessage)
+    if (extensionConnected) {
+      window.postMessage({ type: 'FTRACK_FETCH_NOW' }, '*');
+      toast("Extension is fetching prices — this takes ~2 min");
+      // Poll for completion
+      const poll = setInterval(() => {
+        window.postMessage({ type: 'FTRACK_GET_STATUS' }, '*');
+      }, 5000);
+      // Auto-clear poll after 5 min
+      setTimeout(() => { clearInterval(poll); setFetching(false); }, 300000);
+      return;
     }
 
     // Fallback: try localhost scraper server
@@ -112,7 +75,7 @@ function AppShell() {
       toast("No fetcher available. Install the ftrack extension or start the scraper.");
     }
     setFetching(false);
-  }, [toast]);
+  }, [toast, extensionConnected]);
 
   // Theme toggle
   useEffect(() => {

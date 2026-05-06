@@ -43,15 +43,14 @@ const columns = [
     cell: info => {
       const v = info.getValue();
       if (!v) return "\u2014";
-      try {
-        return (
-          <span className="mono">
-            {new Date(v).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-          </span>
-        );
-      } catch {
-        return <span className="mono">{v}</span>;
+      // Try ISO parse first, fall back to showing raw text (e.g. "7:55 PM on Fri, Jul 10")
+      const d = new Date(v);
+      if (!isNaN(d.getTime())) {
+        return <span className="mono">{d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>;
       }
+      // Extract time from raw format like "7:55 PM on..."
+      const m = v.match(/(\d{1,2}:\d{2}\s*[AP]M)/i);
+      return <span className="mono">{m ? m[1] : v}</span>;
     },
   }),
   columnHelper.accessor("arrivalTime", {
@@ -59,15 +58,12 @@ const columns = [
     cell: info => {
       const v = info.getValue();
       if (!v) return "\u2014";
-      try {
-        return (
-          <span className="mono">
-            {new Date(v).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-          </span>
-        );
-      } catch {
-        return <span className="mono">{v}</span>;
+      const d = new Date(v);
+      if (!isNaN(d.getTime())) {
+        return <span className="mono">{d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</span>;
       }
+      const m = v.match(/(\d{1,2}:\d{2}\s*[AP]M)/i);
+      return <span className="mono">{m ? m[1] : v}</span>;
     },
   }),
   columnHelper.accessor("durationMinutes", {
