@@ -109,9 +109,6 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   else if (pathname === "/settings") crumbs.push("Settings");
   else if (pathname === "/setup") crumbs.push("Setup");
 
-  // Show "Fetch Now" only on routes page (/)
-  const showFetchNow = pathname === "/";
-
   if (!userId) {
     return (
       <div className="app">
@@ -156,17 +153,6 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             crumbs={crumbs}
             right={
               <>
-                {showFetchNow && (
-                  <button
-                    className="btn"
-                    onClick={triggerFetch}
-                    disabled={fetching}
-                    title="Fetch latest prices"
-                  >
-                    <Icon name="refresh" size={13} />
-                    {fetching ? "Fetching..." : "Fetch now"}
-                  </button>
-                )}
                 {extensionConnected && (
                   <span
                     className="pill"
