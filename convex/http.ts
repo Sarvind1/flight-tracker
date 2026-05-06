@@ -37,6 +37,33 @@ http.route({
   }),
 });
 
+// OPTIONS preflight for /sync/stale-targets
+http.route({
+  path: "/sync/stale-targets",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }),
+});
+
+// GET /sync/stale-targets — returns only stale fetch targets
+http.route({
+  path: "/sync/stale-targets",
+  method: "GET",
+  handler: httpAction(async (ctx, request) => {
+    const token = request.headers.get("Authorization");
+    const expected = process.env.SCRAPER_TOKEN;
+    if (!expected || token !== `Bearer ${expected}`) {
+      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+    }
+
+    const targets = await ctx.runMutation(api.fetchTargets.refreshAndListStale);
+    return new Response(JSON.stringify(targets), {
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
+  }),
+});
+
 // OPTIONS preflight for /sync/quotes
 http.route({
   path: "/sync/quotes",
