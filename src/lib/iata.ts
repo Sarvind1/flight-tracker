@@ -1,0 +1,50 @@
+export interface Airport {
+  iata: string;
+  city: string;
+  name: string;
+  country: string;
+}
+
+export const AIRPORTS: Airport[] = [
+  { iata: "SFO", city: "San Francisco", name: "San Francisco Intl", country: "US" },
+  { iata: "OAK", city: "Oakland", name: "Oakland Intl", country: "US" },
+  { iata: "SJC", city: "San Jose", name: "Norman Y. Mineta", country: "US" },
+  { iata: "JFK", city: "New York", name: "John F. Kennedy Intl", country: "US" },
+  { iata: "LGA", city: "New York", name: "LaGuardia", country: "US" },
+  { iata: "EWR", city: "Newark", name: "Newark Liberty Intl", country: "US" },
+  { iata: "LAX", city: "Los Angeles", name: "Los Angeles Intl", country: "US" },
+  { iata: "BUR", city: "Burbank", name: "Hollywood Burbank", country: "US" },
+  { iata: "SEA", city: "Seattle", name: "Seattle-Tacoma Intl", country: "US" },
+  { iata: "PDX", city: "Portland", name: "Portland Intl", country: "US" },
+  { iata: "AUS", city: "Austin", name: "Austin-Bergstrom Intl", country: "US" },
+  { iata: "DEN", city: "Denver", name: "Denver Intl", country: "US" },
+  { iata: "ORD", city: "Chicago", name: "O'Hare Intl", country: "US" },
+  { iata: "BOS", city: "Boston", name: "Logan Intl", country: "US" },
+  { iata: "MIA", city: "Miami", name: "Miami Intl", country: "US" },
+  { iata: "DFW", city: "Dallas", name: "Dallas/Fort Worth", country: "US" },
+  { iata: "ATL", city: "Atlanta", name: "Hartsfield-Jackson", country: "US" },
+  { iata: "LHR", city: "London", name: "Heathrow", country: "GB" },
+  { iata: "LGW", city: "London", name: "Gatwick", country: "GB" },
+  { iata: "CDG", city: "Paris", name: "Charles de Gaulle", country: "FR" },
+  { iata: "ORY", city: "Paris", name: "Orly", country: "FR" },
+  { iata: "AMS", city: "Amsterdam", name: "Schiphol", country: "NL" },
+  { iata: "FRA", city: "Frankfurt", name: "Frankfurt am Main", country: "DE" },
+  { iata: "MAD", city: "Madrid", name: "Adolfo Su\u00e1rez Madrid\u2013Barajas", country: "ES" },
+  { iata: "BCN", city: "Barcelona", name: "Josep Tarradellas", country: "ES" },
+  { iata: "FCO", city: "Rome", name: "Leonardo da Vinci\u2013Fiumicino", country: "IT" },
+  { iata: "LIS", city: "Lisbon", name: "Humberto Delgado", country: "PT" },
+  { iata: "NRT", city: "Tokyo", name: "Narita Intl", country: "JP" },
+  { iata: "HND", city: "Tokyo", name: "Haneda", country: "JP" },
+  { iata: "ICN", city: "Seoul", name: "Incheon Intl", country: "KR" },
+  { iata: "HKG", city: "Hong Kong", name: "Hong Kong Intl", country: "HK" },
+  { iata: "SIN", city: "Singapore", name: "Changi", country: "SG" },
+  { iata: "SYD", city: "Sydney", name: "Kingsford Smith", country: "AU" },
+  { iata: "MEX", city: "Mexico City", name: "Benito Ju\u00e1rez Intl", country: "MX" },
+  { iata: "CUN", city: "Canc\u00fan", name: "Canc\u00fan Intl", country: "MX" },
+  { iata: "YVR", city: "Vancouver", name: "Vancouver Intl", country: "CA" },
+  { iata: "YYZ", city: "Toronto", name: "Pearson Intl", country: "CA" },
+  { iata: "BOM", city: "Mumbai", name: "Chhatrapati Shivaji Maharaj Intl", country: "IN" },
+  { iata: "DEL", city: "New Delhi", name: "Indira Gandhi Intl", country: "IN" },
+  { iata: "BLR", city: "Bengaluru", name: "Kempegowda Intl", country: "IN" },
+  { iata: "DXB", city: "Dubai", name: "Dubai Intl", country: "AE" },
+];
