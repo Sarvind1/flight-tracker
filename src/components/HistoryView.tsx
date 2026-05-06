@@ -89,6 +89,18 @@ export function HistoryView({ routeId, onBack, extensionConnected }: HistoryView
   const cheapestInWindow = window7.length > 0
     ? Math.min(...window7.filter(w => w.cheapest !== null).map(w => w.cheapest!))
     : null;
+  const cheapestDate = cheapestInWindow !== null
+    ? window7.find(w => w.cheapest === cheapestInWindow)?.date
+    : null;
+
+  // Today vs yesterday delta
+  const currentCheapest = cheapestInWindow;
+  const yesterdayPrice = chartHistory.length >= 2
+    ? chartHistory[chartHistory.length - 2].cheapest
+    : null;
+  const delta = currentCheapest !== null && yesterdayPrice !== null
+    ? currentCheapest - yesterdayPrice
+    : null;
 
   // The flight table shows flights for the selected day
   const selectedDayData = window7[selectedDay];
@@ -123,12 +135,17 @@ export function HistoryView({ routeId, onBack, extensionConnected }: HistoryView
         <div className="stat">
           <div className="stat-label">Cheapest in window</div>
           <div className="stat-value">{cheapestInWindow ? fmtMoney(cheapestInWindow) : "\u2014"}</div>
-          <div className="stat-sub">across {window7.length} dates</div>
+          <div className="stat-sub">{cheapestDate ? fmtDate(cheapestDate) : `across ${window7.length} dates`}</div>
         </div>
         <div className="stat">
-          <div className="stat-label">Data points</div>
-          <div className="stat-value mono" style={{ fontSize: 18 }}>{history?.length || 0} days</div>
-          <div className="stat-sub">of price history</div>
+          <div className="stat-label">Today vs yesterday</div>
+          <div className="stat-value mono">
+            {delta === null ? <span style={{ color: "var(--fg-3)" }}>&mdash;</span> :
+              delta === 0 ? <span style={{ color: "var(--fg-3)" }}>flat</span> :
+              delta < 0 ? <span style={{ color: "var(--down)" }}>&darr; {fmtMoney(Math.abs(delta))}</span> :
+              <span style={{ color: "var(--up)" }}>&uarr; {fmtMoney(delta)}</span>}
+          </div>
+          <div className="stat-sub">{currentCheapest ? `current cheapest: ${fmtMoney(currentCheapest)}` : "no data"}</div>
         </div>
         <div className="stat">
           <div className="stat-label">30-day range</div>

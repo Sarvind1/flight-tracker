@@ -1,17 +1,24 @@
 "use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Icon } from "./Icon";
 
-type View = "routes" | "history" | "settings";
-
 interface SidebarProps {
-  view: View;
-  setView: (v: View) => void;
+  view?: string;           // kept for compat but pathname takes precedence
+  setView?: (v: string) => void;  // kept for compat
   routeCount: number;
   activeCount: number;
   lastUpdated?: string;
 }
 
-export function Sidebar({ view, setView, routeCount, activeCount, lastUpdated }: SidebarProps) {
+export function Sidebar({ routeCount, activeCount, lastUpdated }: SidebarProps) {
+  const pathname = usePathname();
+
+  const isActive = (path: string) => {
+    if (path === "/") return pathname === "/" || pathname.startsWith("/route/");
+    return pathname.startsWith(path);
+  };
+
   return (
     <aside className="sidebar">
       <div className="brand">
@@ -20,15 +27,21 @@ export function Sidebar({ view, setView, routeCount, activeCount, lastUpdated }:
         <div className="brand-meta">v0.4</div>
       </div>
       <div className="nav-section-label">Workspace</div>
-      <div className="nav-item" aria-current={view === "routes" ? "page" : undefined} onClick={() => setView("routes")}>
-        <Icon name="list"/> <span>Routes</span> <span className="count">{routeCount}</span>
-      </div>
-      <div className="nav-item" aria-current={view === "history" ? "page" : undefined} onClick={() => setView("history")}>
-        <Icon name="chart"/> <span>History</span>
-      </div>
-      <div className="nav-item" aria-current={view === "settings" ? "page" : undefined} onClick={() => setView("settings")}>
-        <Icon name="gear"/> <span>Settings</span>
-      </div>
+      <Link href="/" style={{ textDecoration: "none" }}>
+        <div className="nav-item" aria-current={isActive("/") ? "page" : undefined}>
+          <Icon name="list"/> <span>Routes</span> <span className="count">{routeCount}</span>
+        </div>
+      </Link>
+      <Link href="/settings" style={{ textDecoration: "none" }}>
+        <div className="nav-item" aria-current={isActive("/settings") ? "page" : undefined}>
+          <Icon name="gear"/> <span>Settings</span>
+        </div>
+      </Link>
+      <Link href="/setup" style={{ textDecoration: "none" }}>
+        <div className="nav-item" aria-current={isActive("/setup") ? "page" : undefined}>
+          <Icon name="plus"/> <span>Extension</span>
+        </div>
+      </Link>
       <div className="nav-section-label">Status</div>
       <div className="nav-item" style={{ cursor: "default" }}>
         <span className="ico" style={{ display: "inline-block", width: 14, height: 14 }}>
