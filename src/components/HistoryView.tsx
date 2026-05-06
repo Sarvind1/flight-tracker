@@ -1,23 +1,59 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { Icon } from "./Icon";
 import { LineChart } from "./LineChart";
+import { useToast } from "./Toast";
 import { fmtMoney, fmtDate, fmtWeekday, dayOfMonth } from "@/lib/utils";
 import { FlightsTable } from "./FlightsTable";
 
 interface HistoryViewProps {
   routeId: Id<"routes">;
   onBack: () => void;
+  extensionConnected?: boolean;
 }
 
-export function HistoryView({ routeId, onBack }: HistoryViewProps) {
+export function HistoryView({ routeId, onBack, extensionConnected }: HistoryViewProps) {
   const route = useQuery(api.routes.get, { id: routeId });
   const history = useQuery(api.quotes.getHistory, { routeId });
   const routeQuotes = useQuery(api.quotes.listByRoute, { routeId });
   const [selectedDay, setSelectedDay] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const toast = useToast();
+
+  // Per-route refresh: tell extension to fetch just this route's targets
+  const refreshRoute = useCallback(() => {
+    if (!routeQuotes || !extensionConnected) {
+      toast("Extension not connected");
+      return;
+    }
+    const targetIds = routeQuotes.map(rq => rq.fetchTarget._id);
+    if (targetIds.length === 0) {
+      toast("No targets to refresh");
+      return;
+    }
+    setRefreshing(true);
+    toast(`Refreshing ${targetIds.length} dates...`);
+    window.postMessage({ type: 'FTRACK_FETCH_ROUTE', targetIds }, '*');
+
+    // Listen for completion
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === 'FTRACK_STATUS' && !event.data.fetching) {
+        setRefreshing(false);
+        toast("Route prices updated!");
+        window.removeEventListener('message', handler);
+      }
+    };
+    window.addEventListener('message', handler);
+    // Poll status
+    const poll = setInterval(() => {
+      window.postMessage({ type: 'FTRACK_GET_STATUS' }, '*');
+    }, 3000);
+    // Timeout after 3 min
+    setTimeout(() => { clearInterval(poll); setRefreshing(false); window.removeEventListener('message', handler); }, 180000);
+  }, [routeQuotes, extensionConnected, toast]);
 
   // Build 7-day window from routeQuotes
   // Each entry in routeQuotes has a fetchTarget with departureDate and quotes
@@ -74,6 +110,11 @@ export function HistoryView({ routeId, onBack }: HistoryViewProps) {
               {route.tripType === "round_trip" ? `Round trip \u00b7 ${route.returnAfterDays}-day return` : "One way"} &middot; {route.cabin.replace("_", " ").toLowerCase()} &middot; {route.passengers} pax &middot; tracking {route.windowLengthDays} dates
             </p>
           </div>
+        </div>
+        <div className="actions">
+          <button className="btn" onClick={refreshRoute} disabled={refreshing || !extensionConnected} title={extensionConnected ? "Refresh this route" : "Extension required"}>
+            <Icon name="refresh" size={13}/>{refreshing ? "Refreshing..." : "Refresh route"}
+          </button>
         </div>
       </div>
 

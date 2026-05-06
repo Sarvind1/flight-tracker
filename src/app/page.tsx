@@ -187,6 +187,7 @@ function AppShell() {
             <HistoryView
               routeId={historyRouteId}
               onBack={() => { setView("routes"); setHistoryRouteId(null); }}
+              extensionConnected={extensionConnected}
             />
           )}
           {view === "history" && !historyRouteId && (
