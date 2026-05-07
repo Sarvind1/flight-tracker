@@ -25,8 +25,13 @@ export function HistoryView({ routeId, onBack, extensionConnected }: HistoryView
 
   // Per-route refresh: tell extension to fetch just this route's targets
   const refreshRoute = useCallback(() => {
-    if (!routeQuotes || !extensionConnected) {
-      toast("Extension not connected");
+    if (!extensionConnected) {
+      toast("Extension required — install it to fetch prices");
+      setTimeout(() => window.location.href = "/setup", 1500);
+      return;
+    }
+    if (!routeQuotes) {
+      toast("No targets to refresh");
       return;
     }
     const targetIds = routeQuotes.map(rq => rq.fetchTarget._id);
@@ -124,9 +129,14 @@ export function HistoryView({ routeId, onBack, extensionConnected }: HistoryView
           </div>
         </div>
         <div className="actions">
-          <button className="btn" onClick={refreshRoute} disabled={refreshing || !extensionConnected} title={extensionConnected ? "Refresh this route" : "Extension required"}>
+          <button className="btn" onClick={refreshRoute} disabled={refreshing}>
             <Icon name="refresh" size={13}/>{refreshing ? "Refreshing..." : "Refresh route"}
           </button>
+          {!extensionConnected && (
+            <a href="/setup" style={{ fontSize: 11, color: "var(--fg-3)", textDecoration: "underline" }}>
+              extension required
+            </a>
+          )}
         </div>
       </div>
 
