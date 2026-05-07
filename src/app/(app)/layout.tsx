@@ -28,13 +28,13 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       if (event.data?.type === "FTRACK_STATUS") {
         if (!event.data.fetching) {
           setFetching(false);
-          toast("Prices updated!");
+          // Don't toast here — let the component that initiated the fetch handle it
         }
       }
     };
     window.addEventListener("message", handler);
     return () => window.removeEventListener("message", handler);
-  }, [toast]);
+  }, []);
 
   const triggerFetch = useCallback(async () => {
     setFetching(true);
@@ -46,9 +46,19 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       const poll = setInterval(() => {
         window.postMessage({ type: "FTRACK_GET_STATUS" }, "*");
       }, 5000);
+      const handler = (event: MessageEvent) => {
+        if (event.data?.type === "FTRACK_STATUS" && !event.data.fetching) {
+          clearInterval(poll);
+          setFetching(false);
+          toast("Prices updated!");
+          window.removeEventListener("message", handler);
+        }
+      };
+      window.addEventListener("message", handler);
       setTimeout(() => {
         clearInterval(poll);
         setFetching(false);
+        window.removeEventListener("message", handler);
       }, 300000);
       return;
     }

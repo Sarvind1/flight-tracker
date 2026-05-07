@@ -26,8 +26,7 @@ export function HistoryView({ routeId, onBack, extensionConnected }: HistoryView
   // Per-route refresh: tell extension to fetch just this route's targets
   const refreshRoute = useCallback(() => {
     if (!extensionConnected) {
-      toast("Extension required — install it to fetch prices");
-      setTimeout(() => window.location.href = "/setup", 1500);
+      toast("Extension required — go to Setup to install it");
       return;
     }
     if (!routeQuotes) {
@@ -43,19 +42,20 @@ export function HistoryView({ routeId, onBack, extensionConnected }: HistoryView
     toast(`Refreshing ${targetIds.length} dates...`);
     window.postMessage({ type: 'FTRACK_FETCH_ROUTE', targetIds }, '*');
 
+    // Poll status
+    const poll = setInterval(() => {
+      window.postMessage({ type: 'FTRACK_GET_STATUS' }, '*');
+    }, 3000);
     // Listen for completion
     const handler = (event: MessageEvent) => {
       if (event.data?.type === 'FTRACK_STATUS' && !event.data.fetching) {
+        clearInterval(poll);
         setRefreshing(false);
         toast("Route prices updated!");
         window.removeEventListener('message', handler);
       }
     };
     window.addEventListener('message', handler);
-    // Poll status
-    const poll = setInterval(() => {
-      window.postMessage({ type: 'FTRACK_GET_STATUS' }, '*');
-    }, 3000);
     // Timeout after 3 min
     setTimeout(() => { clearInterval(poll); setRefreshing(false); window.removeEventListener('message', handler); }, 180000);
   }, [routeQuotes, extensionConnected, toast]);

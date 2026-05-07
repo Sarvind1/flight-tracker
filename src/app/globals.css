@@ -229,7 +229,7 @@ body{
 
 .route-row{
   display:grid;
-  grid-template-columns: 138px 1fr 84px 110px 130px 70px 36px;
+  grid-template-columns: 138px 1fr 84px 110px 130px 80px 90px;
   gap:0;
   align-items:center;
   height:var(--row-h);
@@ -243,7 +243,7 @@ body{
 .route-row.paused{ opacity:0.65 }
 .route-head{
   display:grid;
-  grid-template-columns: 138px 1fr 84px 110px 130px 70px 36px;
+  grid-template-columns: 138px 1fr 84px 110px 130px 80px 90px;
   align-items:center;
   height:34px;padding:0 16px;
   border-bottom:1px solid var(--border);
